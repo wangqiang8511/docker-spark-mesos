@@ -1,0 +1,3 @@
+VERSION=$(cat VERSION)
+docker build $@ -t sparkmesos .
+docker tag -f sparkmesos:latest sparkmesos:$VERSION
