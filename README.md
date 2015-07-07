@@ -7,6 +7,8 @@ Build with
 * spark 1.4.0
 * mesos 0.22.1
 
+# Reference
+
 * [Deploy spark on mesos cluster with docker](https://spark.apache.org/docs/latest/running-on-mesos.html#mesos-docker-support)
 * [Ipython Scipystack Image](https://registry.hub.docker.com/u/ipython/scipystack/)
 
@@ -36,6 +38,19 @@ docker run -it --rm \
   -e PYSPARK_DRIVER_PYTHON=ipython2 \
   sparkmesos:1.0.0 /opt/spark/bin/pyspark
 ```
+
+Run a jupyter server with pyspark running on mesos cluster.
+
+```bash
+docker run -it --rm \
+  -e SPARK_MASTER="mesos://zk://$ZOOKEEPER_HOSTS" \
+  -e SPARK_IMAGE="sparkmesos:1.0.0" \
+  -e PYSPARK_DRIVER_PYTHON=ipython2 \
+  -e PYSPARK_DRIVER_PYTHON_OPTS="notebook --ip='*'" \
+  sparkmesos:1.0.0 /opt/spark/bin/pyspark
+```
+
+We suggest start the jupyter docker container with marathon as a services.
 
 # TODO
 
