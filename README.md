@@ -1,14 +1,14 @@
 # Introduction
 
-Dockerfiler for spark run with mesos.
+Docker image for running spark with mesos.
 Build with 
 
 * latest scipystack images to unlock pyspark power.
 * spark 1.4.0
 * mesos 0.22.1
 
-[Deploy spark on mesos cluster with docker](https://spark.apache.org/docs/latest/running-on-mesos.html#mesos-docker-support)
-[Ipython Scipystack Image](https://registry.hub.docker.com/u/ipython/scipystack/)
+* [Deploy spark on mesos cluster with docker](https://spark.apache.org/docs/latest/running-on-mesos.html#mesos-docker-support)
+* [Ipython Scipystack Image](https://registry.hub.docker.com/u/ipython/scipystack/)
 
 # How to use
 
