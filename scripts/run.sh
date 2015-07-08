@@ -16,4 +16,4 @@ then
 	echo "spark.mesos.executor.docker.volumes: $ADDITIONAL_VOLUMES" >> /opt/spark/conf/spark-defaults.conf
 fi
 
-/bin/sh -c $@
+exec "$@"
