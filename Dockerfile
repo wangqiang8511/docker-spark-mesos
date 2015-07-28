@@ -19,6 +19,9 @@ RUN curl -s -O  https://s3.amazonaws.com/bigdata-thirdparty/mesos_cluster/mesos_
 
 # Fix pypspark six error.
 RUN pip2 install -U six
+RUN pip2 install boto
+RUN pip2 install msgpack-python
+RUN pip2 install avro
 
 COPY spark_conf/* /opt/spark/conf/
 COPY scripts /scripts
