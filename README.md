@@ -1,90 +1,52 @@
-# Introduction
+# Spark Docker for Mesos (DCOS)
 
-Docker image for running spark with mesos.
+Docker image for running spark with mesos (DCOS).
 Build with 
 
-* latest scipystack images to unlock pyspark power.
-* spark 1.4.0
-* mesos 0.22.1
-
-# Reference
-
-* [Deploy spark on mesos cluster with docker](https://spark.apache.org/docs/latest/running-on-mesos.html#mesos-docker-support)
-* [Ipython Scipystack Image](https://registry.hub.docker.com/u/ipython/scipystack/)
+* spark 2.1.1 (hadoop 2.7) (https://d3kbcqa49mib13.cloudfront.net/spark-2.1.1-bin-hadoop2.7.tgz)
+* mesos 1.1.0 (http://repos.mesosphere.com/debian/pool/main/m/mesos/mesos_1.1.0-2.0.107.debian81_amd64.deb)
 
 # How to use
 
 Build Image
 
 ```bash
-./build
+make docker-build
 ```
 
-Spark driver config in your $SPARK\_HOME/conf/spark-defaults.conf
+Pull Image
 
 ```bash
-spark.master                       mesos://your_mesos_master:5050
-spark.mesos.mesosExecutor.cores    0.8
-spark.mesos.executor.docker.image  sparkmesos:lastest
-spark.mesos.executor.home          /opt/spark
+make docker-pull
 ```
 
-Run the following script in any instance with mesos, docker installed to driver spark with mesos
+Start spark driver inside docker container
 
 ```bash
-docker run -it --rm \
-  -e SPARK_MASTER="mesos://zk://$ZOOKEEPER_HOSTS" \
-  -e SPARK_IMAGE="sparkmesos:latest" \
-  -e PYSPARK_DRIVER_PYTHON=ipython2 \
-  sparkmesos:latest /opt/spark/bin/pyspark
-```
+MESOS_IP=mesos://<ip>:<port>
+EXECUTOR_IMAGE=dmitryb/mesos-spark:2.1.1
+CORES=2
+RAM=2g
 
-Run a jupyter server with pyspark running on mesos cluster.
-
-```bash
-docker run -it --rm \
-  -e SPARK_MASTER="mesos://zk://$ZOOKEEPER_HOSTS" \
-  -e SPARK_IMAGE="sparkmesos:latest" \
-  -e PYSPARK_DRIVER_PYTHON=ipython2 \
-  -e PYSPARK_DRIVER_PYTHON_OPTS="notebook --ip='*'" \
-  sparkmesos:latest /opt/spark/bin/pyspark
-```
-
-We suggest start the jupyter docker container with marathon as a services.
-
-# How to set other configurations
-
-You can set following config with ENV
-
-* spark.master  $SPARK\_MASTER
-* spark.mesos.mesosExecutor.cores   $MESOS\_EXECUTOR\_CORE
-* spark.mesos.executor.docker.image  $SPARK\_IMAGE
-
-The other settings like spark.executor.memory can be set when you run the driver docker container with --conf. 
-
-```bash
-docker run -it --rm \
-  -e SPARK_MASTER="mesos://zk://$ZOOKEEPER_HOSTS" \
-  -e SPARK_IMAGE="sparkmesos:latest" \
-  -e PYSPARK_DRIVER_PYTHON=ipython2 \
-  sparkmesos:latest /opt/spark/bin/spark-submit --name "My app" \
-  --driver-memory=2g \
-  --conf spark.executor.memory=5g \
-  --conf spark.shuffle.spill=false \
-  --conf "spark.executor.extraJavaOptions=-XX:+PrintGCDetails -XX:+PrintGCTimeStamps" myApp.jar
-```
-
-You can also mount docker volume to replace /opt/spark/conf/spark-defaults.conf
-
-```bash
-docker run -it --rm \
-  -e SPARK_MASTER="mesos://zk://$ZOOKEEPER_HOSTS" \
-  -e SPARK_IMAGE="sparkmesos:latest" \
-  -e PYSPARK_DRIVER_PYTHON=ipython2 \
-  -v /path/to/your/spark-defaults.conf:/opt/spark/conf/spark-defaults.conf \
-  sparkmesos:latest /opt/spark/bin/pyspark
+docker run -it --rm --net=host dmitryb/mesos-spark:2.1.1 bash /opt/spark/bin/spark-shell \
+    --conf spark.master=${MESOS_IP} \
+    --conf spark.driver.host=${DRIVER_IP} \
+    --conf spark.mesos.coarse=true \
+    --conf spark.mesos.executor.docker.image=${EXECUTOR_IMAGE} \
+    --conf spark.mesos.executor.home=/opt/spark \
+    --conf spark.task.maxFailures=10 \
+    --conf spark.sql.parquet.compression.codec=gzip \
+    --conf spark.sql.warehouse.dir=file:///tmp \
+    --conf spark.serializer=org.apache.spark.serializer.KryoSerializer \
+    --conf spark.kryoserializer.buffer.max=1g \
+    --conf spark.task.cpus=1 \
+    --conf spark.executor.memory=${RAM} \
+    --conf spark.cores.max=${CORES} \
+    --conf spark.sql.shuffle.partitions=2000 \
+    --conf spark.shuffle.spill=true \
+    --conf spark.executor.heartbeatInterval=10
 ```
 
 # TODO
 
-Add native netlib-java in the image for mllib. See [here](https://spark.apache.org/docs/latest/mllib-guide.html)
+Integrate with pyspark
