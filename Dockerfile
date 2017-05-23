@@ -1,31 +1,27 @@
-FROM ipython/scipystack
+FROM java:openjdk-8-jdk
 
-MAINTAINER Wang Qiang "wangqiang8511@gmail.com"
-
-ENV DEBIAN_FRONTEND noninteractive
+MAINTAINER Dmitry B "ficha83@gmail.com"
 
 RUN apt-get update && \
-    apt-get install -y python libnss3 openjdk-7-jre-headless curl
+    apt-get install -y python libnss3 curl
 
-RUN curl https://s3.amazonaws.com/bigdata-thirdparty/spark/spark-1.4.0-bin-hadoop2.6.tgz \
-    | tar -xzC /opt && \
-    mv /opt/spark* /opt/spark
+RUN cd /tmp && \
+        wget http://repos.mesosphere.com/debian/pool/main/m/mesos/mesos_1.1.0-2.0.107.debian81_amd64.deb && \
+        dpkg --unpack mesos_1.1.0-2.0.107.debian81_amd64.deb && \
+        apt-get install -f -y && \
+        rm mesos_1.1.0-2.0.107.debian81_amd64.deb && \
+        apt-get clean
 
-RUN curl -s -O  https://s3.amazonaws.com/bigdata-thirdparty/mesos_cluster/mesos_0.22.1/mesos-0.22.1.deb && \
-    dpkg --unpack mesos-0.22.1.deb && \
-    apt-get install -f -y && \
-    rm mesos-0.22.1.deb && \
-    apt-get clean
+RUN cd /tmp && \
+        wget https://d3kbcqa49mib13.cloudfront.net/spark-2.1.1-bin-hadoop2.7.tgz && \
+        tar -xzvf spark-2.1.1-bin-hadoop2.7.tgz && \
+        mv spark-2.1.1-bin-hadoop2.7 /opt/spark && \
+        rm spark-2.1.1-bin-hadoop2.7.tgz
 
-# Fix pypspark six error.
-RUN pip2 install -U six
-RUN pip2 install boto
-RUN pip2 install msgpack-python
-RUN pip2 install avro
+ENV MESOS_NATIVE_JAVA_LIBRARY /usr/lib/libmesos.so
+ENV SPARK_HOME /opt/spark
 
 COPY spark_conf/* /opt/spark/conf/
 COPY scripts /scripts
-
-ENV SPARK_HOME /opt/spark
 
 ENTRYPOINT ["/scripts/run.sh"]
